@@ -1,1 +1,213 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>راسخ | المعرفة الإسلامية الموثقة</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            color: #222;
+        }
+
+        .container {
+            width: min(900px, 92%);
+            margin: auto;
+            padding: 40px 0;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 42px;
+            margin: 0 0 10px;
+        }
+
+        header p {
+            color: #666;
+            font-size: 17px;
+        }
+
+        .question-box {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 130px;
+            resize: vertical;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 17px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        textarea:focus {
+            border-color: #777;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        select,
+        button {
+            border: none;
+            border-radius: 10px;
+            padding: 13px 18px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        select {
+            background: #eee;
+        }
+
+        button {
+            background: #222;
+            color: white;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .result {
+            display: none;
+            margin-top: 25px;
+        }
+
+        .answer,
+        .sources {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            margin-top: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .answer h2,
+        .sources h2 {
+            margin-top: 0;
+        }
+
+        .placeholder {
+            color: #777;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #888;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+
+        <header>
+            <h1>راسخ</h1>
+            <p>منصة للمعرفة الإسلامية الموثقة من مصادرها</p>
+        </header>
+
+        <section class="question-box">
+
+            <textarea
+                id="question"
+                placeholder="اكتب سؤالك هنا..."
+            ></textarea>
+
+            <div class="controls">
+
+                <select id="language">
+                    <option value="ar">العربية</option>
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                    <option value="tr">Türkçe</option>
+                    <option value="ur">اردو</option>
+                </select>
+
+                <button id="askButton">
+                    اسأل راسخ
+                </button>
+
+            </div>
+
+        </section>
+
+        <section class="result" id="result">
+
+            <div class="answer">
+                <h2>الإجابة</h2>
+
+                <p id="answerText" class="placeholder">
+                    ستظهر الإجابة هنا بعد ربط النظام بمحرك البحث والذكاء الاصطناعي.
+                </p>
+            </div>
+
+            <div class="sources">
+                <h2>المصادر</h2>
+
+                <p id="sourcesText" class="placeholder">
+                    ستظهر هنا المصادر التي اعتمدت عليها الإجابة.
+                </p>
+            </div>
+
+        </section>
+
+        <footer>
+            راسخ — المعرفة الإسلامية الموثقة
+        </footer>
+
+    </main>
+
+    <script>
+        const askButton = document.getElementById("askButton");
+        const question = document.getElementById("question");
+        const result = document.getElementById("result");
+
+        askButton.addEventListener("click", function () {
+
+            const text = question.value.trim();
+
+            if (!text) {
+                alert("اكتب سؤالك أولًا.");
+                return;
+            }
+
+            result.style.display = "block";
+
+            document.getElementById("answerText").textContent =
+                "تم استقبال السؤال. سيتم ربطه بمحرك البحث وقاعدة المصادر في المرحلة التالية.";
+
+            document.getElementById("sourcesText").textContent =
+                "لم يتم ربط قاعدة المصادر بعد.";
+
+        });
+    </script>
+
+</body>
+</html>
