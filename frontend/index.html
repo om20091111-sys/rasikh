@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>راسخ | المعرفة الإسلامية الموثقة</title>
+    <title>راسخ | المعرفة الإسلامية</title>
 
     <style>
         * {
@@ -39,7 +39,9 @@
             font-size: 17px;
         }
 
-        .question-box {
+        .question-box,
+        .answer,
+        .sources {
             background: white;
             padding: 25px;
             border-radius: 16px;
@@ -79,6 +81,7 @@
 
         select {
             background: #eee;
+            cursor: pointer;
         }
 
         button {
@@ -92,6 +95,11 @@
             opacity: 0.9;
         }
 
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
         .result {
             display: none;
             margin-top: 25px;
@@ -99,11 +107,7 @@
 
         .answer,
         .sources {
-            background: white;
-            padding: 25px;
-            border-radius: 16px;
             margin-top: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
         }
 
         .answer h2,
@@ -111,8 +115,17 @@
             margin-top: 0;
         }
 
+        #answerText {
+            white-space: pre-wrap;
+            line-height: 1.9;
+        }
+
         .placeholder {
             color: #777;
+        }
+
+        .error {
+            color: #b00020;
         }
 
         footer {
@@ -121,93 +134,279 @@
             color: #888;
             font-size: 14px;
         }
+
+        @media (max-width: 600px) {
+            .controls {
+                flex-direction: column;
+            }
+
+            header h1 {
+                font-size: 36px;
+            }
+        }
     </style>
 </head>
 
 <body>
 
-    <main class="container">
+<main class="container">
 
-        <header>
-            <h1>راسخ</h1>
-            <p>منصة للمعرفة الإسلامية الموثقة من مصادرها</p>
-        </header>
+    <header>
+        <h1>راسخ</h1>
+        <p id="subtitle">منصة للمعرفة الإسلامية</p>
+    </header>
 
-        <section class="question-box">
+    <section class="question-box">
 
-            <textarea
-                id="question"
-                placeholder="اكتب سؤالك هنا..."
-            ></textarea>
+        <textarea
+            id="question"
+            placeholder="اكتب سؤالك هنا..."
+        ></textarea>
 
-            <div class="controls">
+        <div class="controls">
 
-                <select id="language">
-                    <option value="ar">العربية</option>
-                    <option value="en">English</option>
-                    <option value="fr">Français</option>
-                    <option value="tr">Türkçe</option>
-                    <option value="ur">اردو</option>
-                </select>
+            <select id="language">
+                <option value="ar">العربية</option>
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="tr">Türkçe</option>
+                <option value="ur">اردو</option>
+            </select>
 
-                <button id="askButton">
-                    اسأل راسخ
-                </button>
+            <button id="askButton">
+                اسأل راسخ
+            </button>
 
-            </div>
+        </div>
 
-        </section>
+    </section>
 
-        <section class="result" id="result">
+    <section class="result" id="result">
 
-            <div class="answer">
-                <h2>الإجابة</h2>
+        <div class="answer">
+            <h2 id="answerTitle">الإجابة</h2>
 
-                <p id="answerText" class="placeholder">
-                    ستظهر الإجابة هنا بعد ربط النظام بمحرك البحث والذكاء الاصطناعي.
-                </p>
-            </div>
+            <p id="answerText" class="placeholder">
+                ستظهر الإجابة هنا.
+            </p>
+        </div>
 
-            <div class="sources">
-                <h2>المصادر</h2>
+        <div class="sources">
+            <h2 id="sourcesTitle">المصادر</h2>
 
-                <p id="sourcesText" class="placeholder">
-                    ستظهر هنا المصادر التي اعتمدت عليها الإجابة.
-                </p>
-            </div>
+            <p id="sourcesText" class="placeholder">
+                سيتم ربط المصادر وقاعدة المعرفة في المرحلة التالية.
+            </p>
+        </div>
 
-        </section>
+    </section>
 
-        <footer>
-            راسخ — المعرفة الإسلامية الموثقة
-        </footer>
+    <footer>
+        راسخ — المعرفة الإسلامية
+    </footer>
 
-    </main>
+</main>
 
-    <script>
-        const askButton = document.getElementById("askButton");
-        const question = document.getElementById("question");
-        const result = document.getElementById("result");
+<script>
 
-        askButton.addEventListener("click", function () {
+    // رابط Cloudflare Worker
+    const WORKER_URL =
+        "https://rasikh.om20091111.workers.dev/";
 
-            const text = question.value.trim();
+    const askButton = document.getElementById("askButton");
+    const question = document.getElementById("question");
+    const language = document.getElementById("language");
 
-            if (!text) {
-                alert("اكتب سؤالك أولًا.");
-                return;
+    const result = document.getElementById("result");
+    const answerText = document.getElementById("answerText");
+    const sourcesText = document.getElementById("sourcesText");
+
+    const answerTitle = document.getElementById("answerTitle");
+    const sourcesTitle = document.getElementById("sourcesTitle");
+    const subtitle = document.getElementById("subtitle");
+
+    const languages = {
+
+        ar: {
+            dir: "rtl",
+            title: "راسخ",
+            subtitle: "منصة للمعرفة الإسلامية",
+            placeholder: "اكتب سؤالك هنا...",
+            button: "اسأل راسخ",
+            loading: "جاري التفكير...",
+            answer: "الإجابة",
+            sources: "المصادر",
+            noSources: "سيتم ربط المصادر وقاعدة المعرفة في المرحلة التالية.",
+            empty: "اكتب سؤالك أولًا.",
+            error: "حدث خطأ أثناء الاتصال براسخ."
+        },
+
+        en: {
+            dir: "ltr",
+            title: "RASIKH",
+            subtitle: "An Islamic knowledge platform",
+            placeholder: "Write your question here...",
+            button: "Ask RASIKH",
+            loading: "Thinking...",
+            answer: "Answer",
+            sources: "Sources",
+            noSources: "Sources and the knowledge base will be connected in the next stage.",
+            empty: "Please write your question first.",
+            error: "An error occurred while connecting to RASIKH."
+        },
+
+        fr: {
+            dir: "ltr",
+            title: "RASIKH",
+            subtitle: "Une plateforme de connaissance islamique",
+            placeholder: "Écrivez votre question ici...",
+            button: "Demander à RASIKH",
+            loading: "Réflexion...",
+            answer: "Réponse",
+            sources: "Sources",
+            noSources: "Les sources et la base de connaissances seront ajoutées à l'étape suivante.",
+            empty: "Veuillez écrire votre question.",
+            error: "Une erreur s'est produite lors de la connexion à RASIKH."
+        },
+
+        tr: {
+            dir: "ltr",
+            title: "RASIKH",
+            subtitle: "İslami bilgi platformu",
+            placeholder: "Sorunuzu buraya yazın...",
+            button: "RASIKH'a Sor",
+            loading: "Düşünüyor...",
+            answer: "Cevap",
+            sources: "Kaynaklar",
+            noSources: "Kaynaklar ve bilgi tabanı bir sonraki aşamada eklenecek.",
+            empty: "Lütfen sorunuzu yazın.",
+            error: "RASIKH'a bağlanırken bir hata oluştu."
+        },
+
+        ur: {
+            dir: "rtl",
+            title: "راسخ",
+            subtitle: "اسلامی معلومات کا پلیٹ فارم",
+            placeholder: "اپنا سوال یہاں لکھیں...",
+            button: "راسخ سے پوچھیں",
+            loading: "سوچا جا رہا ہے...",
+            answer: "جواب",
+            sources: "ذرائع",
+            noSources: "ذرائع اور علمی ڈیٹا بیس اگلے مرحلے میں شامل کیے جائیں گے۔",
+            empty: "براہ کرم پہلے اپنا سوال لکھیں۔",
+            error: "راسخ سے رابطہ کرتے وقت ایک خرابی پیش آگئی۔"
+        }
+    };
+
+
+    // تغيير لغة الواجهة
+    function updateLanguage() {
+
+        const lang = language.value;
+        const data = languages[lang];
+
+        document.documentElement.lang = lang;
+        document.documentElement.dir = data.dir;
+
+        subtitle.textContent = data.subtitle;
+        question.placeholder = data.placeholder;
+
+        askButton.textContent = data.button;
+
+        answerTitle.textContent = data.answer;
+        sourcesTitle.textContent = data.sources;
+
+        sourcesText.textContent = data.noSources;
+    }
+
+
+    language.addEventListener("change", updateLanguage);
+
+
+    // إرسال السؤال إلى الذكاء الاصطناعي
+    async function askRasikh() {
+
+        const text = question.value.trim();
+        const lang = language.value;
+        const ui = languages[lang];
+
+        if (!text) {
+            alert(ui.empty);
+            return;
+        }
+
+        result.style.display = "block";
+
+        answerText.className = "placeholder";
+        answerText.textContent = ui.loading;
+
+        askButton.disabled = true;
+        askButton.textContent = ui.loading;
+
+        try {
+
+            const response = await fetch(WORKER_URL, {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    question: text,
+                    language: lang
+                })
+
+            });
+
+
+            const data = await response.json();
+
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || "Request failed");
             }
 
-            result.style.display = "block";
 
-            document.getElementById("answerText").textContent =
-                "تم استقبال السؤال. سيتم ربطه بمحرك البحث وقاعدة المصادر في المرحلة التالية.";
+            answerText.className = "";
+            answerText.textContent =
+                data.answer || ui.error;
 
-            document.getElementById("sourcesText").textContent =
-                "لم يتم ربط قاعدة المصادر بعد.";
 
-        });
-    </script>
+        } catch (error) {
+
+            console.error(error);
+
+            answerText.className = "error";
+            answerText.textContent = ui.error;
+
+        } finally {
+
+            askButton.disabled = false;
+            askButton.textContent = ui.button;
+
+        }
+    }
+
+
+    askButton.addEventListener("click", askRasikh);
+
+
+    // Ctrl + Enter لإرسال السؤال
+    question.addEventListener("keydown", function(event) {
+
+        if (event.ctrlKey && event.key === "Enter") {
+            askRasikh();
+        }
+
+    });
+
+
+    // اللغة الافتراضية
+    updateLanguage();
+
+</script>
 
 </body>
 </html>
