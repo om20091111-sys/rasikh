@@ -1,4 +1,4 @@
-const MODEL = "@cf/zai-org/glm-4.7-flash";
+const MODEL = "@cf/meta/llama-3.1-8b-instruct";
 
 const LANGUAGE_NAMES = {
   ar: "العربية",
